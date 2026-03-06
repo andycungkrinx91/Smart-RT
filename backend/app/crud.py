@@ -442,12 +442,30 @@ async def sum_iuran_warga_tunggakan_period(db: AsyncSession, month: int, year: i
 
 
 async def sum_iuran_warga_tunggakan_year(db: AsyncSession, year: int) -> int:
-    """Sum tunggakan (belum lunas) iuran warga for a specific year."""
+    """Sum tunggakan (belum lunas) iuran warga for a specific year.
+    
+    - Current year: Sum from January to current month (year to date)
+    - Past years: Sum all 12 months (complete year)
+    """
+    from datetime import datetime
+    now = datetime.now()
+    
+    # Determine month range
+    if year == now.year:
+        # Current year: sum from Jan to current month
+        end_month = now.month
+    else:
+        # Past years: sum all 12 months
+        end_month = 12
+    
+    # Build month range filter
+    bulan_patterns = [f"{year:04d}-{month:02d}" for month in range(1, end_month + 1)]
+    
     return int(
         await db.scalar(
             select(func.sum(IuranWarga.jumlah))
             .where(IuranWarga.status_pembayaran == IuranStatus.BELUM_LUNAS)
-            .where(IuranWarga.bulan.like(f"{year:04d}-%"))
+            .where(IuranWarga.bulan.in_(bulan_patterns))
         )
         or 0
     )
@@ -503,60 +521,73 @@ async def count_iuran_warga_status_period(db: AsyncSession, status: IuranStatus,
 
 
 async def count_iuran_warga_status_year(db: AsyncSession, status: IuranStatus, year: int) -> int:
-    """Count unique no_kk (eligible KKs only) by payment status for a specific year.
-
-    'Lunas' = distinct no_kk that have paid for ALL months in the year up to
-    the current month.
-
-    'Belum Lunas' = Total eligible KKs − Lunas KKs for that year (i.e. KKs
-    that have at least one unpaid month this year).
+    """Count iuran records by payment status for a specific year.
+    
+    - Current year: Count from January to current month (year to date)
+    - Past years: Count all 12 months (complete year)
     """
     from datetime import datetime
     now = datetime.now()
-    current_month = now.month if now.year == year else 12
-    if now.year < year:
-        current_month = 0
-
-    if status == IuranStatus.LUNAS:
-        if current_month == 0:
-            return 0
-            
-        # Subquery to count months paid per KK
-        subq = (
-            select(IuranWarga.no_kk)
-            .join(DataKartuKeluarga, IuranWarga.no_kk == DataKartuKeluarga.no_kk)
-            .where(DataKartuKeluarga.status_warga.in_(_ELIGIBLE_STATUSES))
-            .where(IuranWarga.status_pembayaran == IuranStatus.LUNAS)
-            .where(IuranWarga.bulan.like(f"{year:04d}-%"))
-            .group_by(IuranWarga.no_kk)
-            .having(func.count(func.distinct(IuranWarga.bulan)) >= current_month)
-        ).subquery()
-        
-        return int(await db.scalar(select(func.count()).select_from(subq)) or 0)
+    
+    # Determine month range
+    if year == now.year:
+        # Current year: count from Jan to current month
+        end_month = now.month
     else:
-        total = await count_eligible_kk(db)
-        lunas = await count_iuran_warga_status_year(db, IuranStatus.LUNAS, year)
-        return max(0, total - lunas)
+        # Past years: count all 12 months
+        end_month = 12
+    
+    # Build month range filter
+    bulan_patterns = [f"{year:04d}-{month:02d}" for month in range(1, end_month + 1)]
+    
+    return int(
+        await db.scalar(
+            select(func.count(IuranWarga.id))
+            .where(IuranWarga.status_pembayaran == status)
+            .where(IuranWarga.bulan.in_(bulan_patterns))
+        )
+        or 0
+    )
 
 
 async def sum_iuran_warga_total_period(db: AsyncSession, month: int, year: int) -> int:
-    """Sum all iuran warga jumlah for a specific month and year."""
+    """Sum all iuran warga jumlah for a specific month and year that are LUNAS (paid)."""
     bulan_value = f"{year:04d}-{month:02d}"
     return int(
         await db.scalar(
             select(func.sum(IuranWarga.jumlah))
             .where(IuranWarga.bulan == bulan_value)
+            .where(IuranWarga.status_pembayaran == IuranStatus.LUNAS)
         )
         or 0
     )
 
 
 async def sum_iuran_warga_total_year(db: AsyncSession, year: int) -> int:
-    """Sum all iuran warga jumlah for a specific year."""
+    """Sum all iuran warga jumlah for a specific year that are LUNAS (paid).
+    
+    - Current year: Sum from January to current month (year to date)
+    - Past years: Sum all 12 months (complete year)
+    """
+    from datetime import datetime
+    now = datetime.now()
+    
+    # Determine month range
+    if year == now.year:
+        # Current year: sum from Jan to current month
+        end_month = now.month
+    else:
+        # Past years: sum all 12 months
+        end_month = 12
+    
+    # Build month range filter
+    bulan_patterns = [f"{year:04d}-{month:02d}" for month in range(1, end_month + 1)]
+    
     return int(
         await db.scalar(
             select(func.sum(IuranWarga.jumlah))
-            .where(IuranWarga.bulan.like(f"{year:04d}-%"))
+            .where(IuranWarga.status_pembayaran == IuranStatus.LUNAS)
+            .where(IuranWarga.bulan.in_(bulan_patterns))
         )
         or 0
     )
@@ -599,7 +630,7 @@ async def list_iuran_warga(
     year: int | None = None,
     sort_by: str | None = None,
     order: str | None = None,
-) -> list[tuple[IuranWarga, str]]:
+) -> list[tuple[IuranWarga, str, str]]:
     """Return iuran warga rows, optionally filtered by year and/or month.
 
     ``bulan`` is stored as ``YYYY-MM``.  Filtering uses ``extract`` on the
@@ -623,7 +654,7 @@ async def list_iuran_warga(
         "created_at": IuranWarga.created_at,
     }
     stmt = (
-        select(IuranWarga, DataKartuKeluarga.nama_kepala_keluarga)
+        select(IuranWarga, DataKartuKeluarga.nama_kepala_keluarga, DataKartuKeluarga.alamat)
         .join(DataKartuKeluarga, IuranWarga.no_kk == DataKartuKeluarga.no_kk)
     )
     if year is not None and month is not None:
@@ -637,7 +668,7 @@ async def list_iuran_warga(
     order_clause = col.asc() if (order or "").lower() == "asc" else col.desc()  # type: ignore[union-attr]
     stmt = stmt.order_by(order_clause)
     res = await db.execute(stmt)
-    return [(row[0], row[1]) for row in res.all()]
+    return [(row[0], row[1], row[2]) for row in res.all()]
 
 
 async def count_iuran_warga(db: AsyncSession) -> int:

@@ -32,11 +32,11 @@ async def data_iuran_warga(
             status_pembayaran=IuranStatus(i.status_pembayaran),
             tanggal_bayar=i.tanggal_bayar,
             metode_pembayaran=i.metode_pembayaran,
-            alamat=i.alamat,
+            alamat=alamat,
             keterangan=i.keterangan,
             created_at=i.created_at,
         )
-        for i, nama_kepala_keluarga in rows
+        for i, nama_kepala_keluarga, alamat in rows
     ]
 
 
@@ -54,9 +54,9 @@ async def add_data_iuran_warga(payload: IuranWargaCreate, db: AsyncSession = Dep
         keterangan=payload.keterangan,
     )
     await notify_stats_changed()
-    # Reload with join to get nama_kepala_keluarga
+    # Reload with join to get nama_kepala_keluarga and alamat from KK
     rows = await list_iuran_warga(db)
-    for i, nama_kepala_keluarga in rows:
+    for i, nama_kepala_keluarga, alamat in rows:
         if i.id == obj.id:
             return IuranWargaOut(
                 id=i.id,
@@ -67,7 +67,7 @@ async def add_data_iuran_warga(payload: IuranWargaCreate, db: AsyncSession = Dep
                 status_pembayaran=IuranStatus(i.status_pembayaran),
                 tanggal_bayar=i.tanggal_bayar,
                 metode_pembayaran=i.metode_pembayaran,
-                alamat=i.alamat,
+                alamat=alamat,
                 keterangan=i.keterangan,
                 created_at=i.created_at,
             )
@@ -91,9 +91,9 @@ async def update_data_iuran_warga(payload: IuranWargaUpdate, db: AsyncSession = 
     if obj is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Data iuran warga tidak ditemukan")
     await notify_stats_changed()
-    # Reload with join to get nama_kepala_keluarga
+    # Reload with join to get nama_kepala_keluarga and alamat from KK
     rows = await list_iuran_warga(db)
-    for i, nama_kepala_keluarga in rows:
+    for i, nama_kepala_keluarga, alamat in rows:
         if i.id == obj.id:
             return IuranWargaOut(
                 id=i.id,
@@ -104,7 +104,7 @@ async def update_data_iuran_warga(payload: IuranWargaUpdate, db: AsyncSession = 
                 status_pembayaran=IuranStatus(i.status_pembayaran),
                 tanggal_bayar=i.tanggal_bayar,
                 metode_pembayaran=i.metode_pembayaran,
-                alamat=i.alamat,
+                alamat=alamat,
                 keterangan=i.keterangan,
                 created_at=i.created_at,
             )

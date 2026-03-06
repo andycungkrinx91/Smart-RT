@@ -160,8 +160,9 @@ export default function IuranPage() {
       params.set('order', sortConfig.order)
 
       if (selectedPeriod) {
-        const [year] = selectedPeriod.split('-')
+        const [year, month] = selectedPeriod.split('-')
         if (year) params.set('year', year)
+        if (month) params.set('month', month)
       }
 
       const [iuranResponse, kkResponse] = await Promise.all([
@@ -662,6 +663,9 @@ export default function IuranPage() {
                   Nama Warga
                   <SortIcon columnKey="nama_kepala_keluarga" sortConfig={sortConfig} />
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Alamat
+                </th>
                 <th
                   className="cursor-pointer select-none px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500 hover:text-primary"
                   onClick={() => handleSort('bulan')}
@@ -689,10 +693,10 @@ export default function IuranPage() {
                 <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Aksi</th>
               </tr>
             </thead>
-            <tbody>
+                <tbody>
               {isLoading ? (
                 <tr>
-                  <td className="px-6 py-10 text-center text-sm text-slate-500" colSpan={6}>
+                  <td className="px-6 py-10 text-center text-sm text-slate-500" colSpan={7}>
                     Memuat data iuran warga...
                   </td>
                 </tr>
@@ -700,7 +704,7 @@ export default function IuranPage() {
 
               {!isLoading && filteredRows.length === 0 ? (
                 <tr>
-                  <td className="px-6 py-10 text-center text-sm text-slate-500" colSpan={6}>
+                  <td className="px-6 py-10 text-center text-sm text-slate-500" colSpan={7}>
                     Tidak ada data iuran yang cocok dengan filter.
                   </td>
                 </tr>
@@ -711,6 +715,7 @@ export default function IuranPage() {
                     <tr key={item.id} className="border-t border-border transition-colors hover:bg-primary/[0.04]">
                       <td className="px-6 py-4 font-mono text-xs text-slate-600">{item.houseNo}</td>
                       <td className="px-6 py-4 font-semibold text-slate-900">{item.nama_kepala_keluarga}</td>
+                      <td className="px-6 py-4 text-slate-600">{item.alamat || '-'}</td>
                       <td className="px-6 py-4 text-slate-600">{formatPeriod(item.bulan)}</td>
                       <td className="px-6 py-4 text-right font-semibold text-slate-900">{formatCurrency(item.jumlah)}</td>
                       <td className="px-6 py-4">
@@ -876,6 +881,12 @@ export default function IuranPage() {
                         </option>
                       ))}
                     </select>
+                  </label>
+                  <label className="space-y-1 text-sm text-slate-600">
+                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Alamat</span>
+                    <div className="input-field bg-slate-50">
+                      {form.alamat || 'Pilih warga terlebih dahulu'}
+                    </div>
                   </label>
                   <label className="space-y-1 text-sm text-slate-600">
                     <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Bulan (Periode)</span>

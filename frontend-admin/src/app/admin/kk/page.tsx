@@ -371,25 +371,26 @@ export default function KKPage() {
                   Kelurahan
                   <SortIcon columnKey="kelurahan" sortConfig={sortConfig} />
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status Warga</th>
                 <th className="px-6 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Aksi</th>
               </tr>
             </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td className="px-6 py-10 text-center text-sm text-slate-500" colSpan={6}>
-                    Memuat data kartu keluarga...
-                  </td>
-                </tr>
-              ) : null}
+                <tbody>
+                  {isLoading ? (
+                    <tr>
+                      <td className="px-6 py-10 text-center text-sm text-slate-500" colSpan={7}>
+                        Memuat data kartu keluarga...
+                      </td>
+                    </tr>
+                  ) : null}
 
-              {!isLoading && filteredItems.length === 0 ? (
-                <tr>
-                  <td className="px-6 py-10 text-center text-sm text-slate-500" colSpan={6}>
-                    Tidak ada data kartu keluarga yang cocok dengan filter.
-                  </td>
-                </tr>
-              ) : null}
+                  {!isLoading && filteredItems.length === 0 ? (
+                    <tr>
+                      <td className="px-6 py-10 text-center text-sm text-slate-500" colSpan={7}>
+                        Tidak ada data kartu keluarga yang cocok dengan filter.
+                      </td>
+                    </tr>
+                  ) : null}
 
               {!isLoading
                 ? paginatedItems.map((item) => (
@@ -399,6 +400,17 @@ export default function KKPage() {
                       <td className="px-6 py-4 font-semibold text-slate-900">{item.nama_kepala_keluarga}</td>
                       <td className="px-6 py-4">{item.rt}/{item.rw}</td>
                       <td className="px-6 py-4">{item.kelurahan}</td>
+                      <td className="px-6 py-4">
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          item.status_warga === 'permanen' 
+                            ? 'bg-green-100 text-green-800' 
+                            : item.status_warga === 'pendatang'
+                            ? 'bg-blue-100 text-blue-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {statusWargaLabel[item.status_warga]}
+                        </span>
+                      </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-1">
                           <button
