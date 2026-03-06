@@ -116,7 +116,9 @@ export default function PendudukPage() {
       }
 
       const data = (await response.json()) as PendudukItem[]
-      setItems(data)
+      // Convert status to lowercase for frontend
+      const normalizedData = data.map((item) => ({ ...item, status: item.status.toLowerCase() as PendudukStatus }))
+      setItems(normalizedData)
     } catch (error) {
       setErrorMessage(toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, data penduduk belum bisa dimuat.'))
     } finally {
@@ -188,7 +190,13 @@ export default function PendudukPage() {
 
     try {
       const isEdit = modalMode === 'edit' && selectedItem
-      const payload = isEdit ? { id: selectedItem.id, ...form } : form
+      
+      // Convert status to proper case for backend
+      const normalizedForm = {
+        ...form,
+        status: form.status === 'aktif' ? 'Aktif' : 'Nonaktif'
+      }
+      const payload = isEdit ? { id: selectedItem.id, ...normalizedForm } : normalizedForm
 
       const response = await fetchWithAuth('/api/penduduk', {
         method: isEdit ? 'PUT' : 'POST',
@@ -201,10 +209,12 @@ export default function PendudukPage() {
       }
 
       const saved = (await response.json()) as PendudukItem
+      // Convert status to lowercase for frontend
+      const normalizedSaved = { ...saved, status: saved.status.toLowerCase() as PendudukStatus }
       if (isEdit) {
-        setItems((prev) => prev.map((item) => (item.id === saved.id ? saved : item)))
+        setItems((prev) => prev.map((item) => (item.id === normalizedSaved.id ? normalizedSaved : item)))
       } else {
-        setItems((prev) => [saved, ...prev])
+        setItems((prev) => [normalizedSaved, ...prev])
         setCurrentPage(1)
       }
       closeModal()
