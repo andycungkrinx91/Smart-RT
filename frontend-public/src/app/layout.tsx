@@ -51,7 +51,7 @@ export default function RootLayout({
           {themeInitScript}
         </Script>
         <Navbar />
-        <main className="min-h-screen overflow-x-hidden pt-[calc(var(--header-h)-25em)] pb-20 lg:pb-0">
+        <main className="min-h-screen overflow-x-hidden pt-0 pb-[calc(7rem+env(safe-area-inset-bottom))] lg:pt-[calc(var(--header-h)-25em)] lg:pb-0">
           {children}
         </main>
         <Footer />

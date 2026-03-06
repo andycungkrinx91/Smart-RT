@@ -32,7 +32,7 @@ export default function HomePage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
+      <div className="flex min-h-[60vh] items-center justify-center bg-background">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
@@ -46,9 +46,9 @@ export default function HomePage() {
   const features = data?.features || [];
 
   return (
-    <div className="overflow-hidden">
-      <div className="ambient-glow top-[-100px] left-[-100px] bg-primary/30" />
-      <div className="ambient-glow bottom-[-200px] right-[-100px] bg-brand-accent/20" />
+    <div className="relative isolate overflow-hidden">
+      <div aria-hidden className="ambient-glow pointer-events-none top-[-100px] left-[-100px] bg-primary/30" />
+      <div aria-hidden className="ambient-glow pointer-events-none bottom-[-200px] right-[-100px] bg-brand-accent/20" />
 
       <section className="relative py-20 lg:py-32">
         <div className="container-custom relative z-10">

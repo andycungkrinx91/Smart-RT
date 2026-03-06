@@ -644,7 +644,7 @@ export default function IuranPage() {
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1040px] text-sm text-slate-700">
+          <table className="w-full min-w-[900px] text-sm text-slate-700">
             <thead className="border-b border-border bg-background">
               <tr>
                 <th

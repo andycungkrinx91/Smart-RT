@@ -45,6 +45,30 @@ const MONTHS = [
   "Desember",
 ];
 
+function normalizeStringList(input: unknown): string[] {
+  if (!Array.isArray(input)) return [];
+
+  const values = input
+    .map((item) => {
+      if (typeof item === "string") return item.trim();
+      if (!item || typeof item !== "object") return "";
+
+      const record = item as Record<string, unknown>;
+      const candidate =
+        record.name ??
+        record.label ??
+        record.nama ??
+        record.provinsi ??
+        record.kabkota ??
+        record.value;
+
+      return typeof candidate === "string" ? candidate.trim() : "";
+    })
+    .filter((value): value is string => value.length > 0);
+
+  return Array.from(new Set(values));
+}
+
 export default function ShalatPage() {
   const now = useMemo(() => new Date(), []);
   const [provinsiList, setProvinsiList] = useState<string[]>([]);
@@ -58,6 +82,8 @@ export default function ShalatPage() {
   const [loadingProv, setLoadingProv] = useState(true);
   const [loadingKab, setLoadingKab] = useState(false);
   const [loadingJadwal, setLoadingJadwal] = useState(false);
+  const [errorProv, setErrorProv] = useState<string | null>(null);
+  const [errorKab, setErrorKab] = useState<string | null>(null);
   const [jadwal, setJadwal] = useState<JadwalResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,11 +91,14 @@ export default function ShalatPage() {
     let cancelled = false;
     async function loadProv() {
       setLoadingProv(true);
+      setErrorProv(null);
+
       try {
         const cached = sessionStorage.getItem(`${CACHE_KEY}:provinsi`);
         if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed)) {
+          const parsed = normalizeStringList(JSON.parse(cached));
+          if (parsed.length > 0) {
+            if (cancelled) return;
             setProvinsiList(parsed);
             setProvinsi(parsed.includes("DKI Jakarta") ? "DKI Jakarta" : parsed[0] || "");
             setLoadingProv(false);
@@ -78,18 +107,28 @@ export default function ShalatPage() {
         }
       } catch {}
 
-      const res = await fetch("/api/public/shalat/provinsi", { cache: "force-cache" })
-        .then((r) => (r.ok ? r.json() : null))
-        .catch(() => null);
-      if (cancelled) return;
-      const list = (res?.data && Array.isArray(res.data) ? res.data : []) as string[];
-      setProvinsiList(list);
-      setProvinsi(list.includes("DKI Jakarta") ? "DKI Jakarta" : list[0] || "");
       try {
-        sessionStorage.setItem(`${CACHE_KEY}:provinsi`, JSON.stringify(list));
-      } catch {}
-      setLoadingProv(false);
+        const res = await fetch("/api/public/shalat/provinsi", { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to load");
+        const json = await res.json();
+        if (cancelled) return;
+        const list = normalizeStringList(json?.data);
+        if (list.length > 0) {
+          setProvinsiList(list);
+          setProvinsi(list.includes("DKI Jakarta") ? "DKI Jakarta" : list[0]);
+          try {
+            sessionStorage.setItem(`${CACHE_KEY}:provinsi`, JSON.stringify(list));
+          } catch {}
+        } else {
+          setErrorProv("Data provinsi tidak tersedia");
+        }
+      } catch (e) {
+        if (!cancelled) setErrorProv("Gagal memuat provinsi");
+      } finally {
+        if (!cancelled) setLoadingProv(false);
+      }
     }
+
     loadProv();
     return () => {
       cancelled = true;
@@ -98,39 +137,58 @@ export default function ShalatPage() {
 
   useEffect(() => {
     let cancelled = false;
+
     async function loadKab() {
-      if (!provinsi) return;
+      if (!provinsi) {
+        setKabkota("");
+        setKabkotaList([]);
+        setLoadingKab(false);
+        return;
+      }
+
       setLoadingKab(true);
+      setErrorKab(null);
       setKabkota("");
       setKabkotaList([]);
+      setJadwal(null);
       const cacheId = `${CACHE_KEY}:kabkota:${provinsi}`;
+
       try {
         const cached = sessionStorage.getItem(cacheId);
         if (cached) {
-          const parsed = JSON.parse(cached);
-          if (Array.isArray(parsed)) {
+          const parsed = normalizeStringList(JSON.parse(cached));
+          if (parsed.length > 0) {
+            if (cancelled) return;
             setKabkotaList(parsed);
-            setKabkota(parsed.find((x) => x.toLowerCase().includes("jakarta")) || parsed[0] || "");
+            setKabkota(parsed.find((x) => x.toLowerCase().includes("jakarta")) || parsed[0]);
             setLoadingKab(false);
             return;
           }
         }
       } catch {}
 
-      const res = await fetch(`/api/public/shalat/kabkota?provinsi=${encodeURIComponent(provinsi)}`, {
-        cache: "force-cache",
-      })
-        .then((r) => (r.ok ? r.json() : null))
-        .catch(() => null);
-      if (cancelled) return;
-      const list = (res?.data && Array.isArray(res.data) ? res.data : []) as string[];
-      setKabkotaList(list);
-      setKabkota(list.find((x) => x.toLowerCase().includes("jakarta")) || list[0] || "");
       try {
-        sessionStorage.setItem(cacheId, JSON.stringify(list));
-      } catch {}
-      setLoadingKab(false);
+        const res = await fetch(`/api/public/shalat/kabkota?provinsi=${encodeURIComponent(provinsi)}`, { cache: "no-store" });
+        if (!res.ok) throw new Error("Failed to load");
+        const json = await res.json();
+        if (cancelled) return;
+        const list = normalizeStringList(json?.data);
+        if (list.length > 0) {
+          setKabkotaList(list);
+          setKabkota(list.find((x) => x.toLowerCase().includes("jakarta")) || list[0]);
+          try {
+            sessionStorage.setItem(cacheId, JSON.stringify(list));
+          } catch {}
+        } else {
+          setErrorKab("Data kota tidak tersedia");
+        }
+      } catch (e) {
+        if (!cancelled) setErrorKab("Gagal memuat kota");
+      } finally {
+        if (!cancelled) setLoadingKab(false);
+      }
     }
+
     loadKab();
     return () => {
       cancelled = true;
@@ -139,8 +197,15 @@ export default function ShalatPage() {
 
   useEffect(() => {
     let cancelled = false;
+
     async function loadJadwal() {
-      if (!provinsi || !kabkota) return;
+      if (!provinsi || !kabkota) {
+        setJadwal(null);
+        setError(null);
+        setLoadingJadwal(false);
+        return;
+      }
+
       setLoadingJadwal(true);
       setError(null);
       const url = `/api/public/shalat?provinsi=${encodeURIComponent(provinsi)}&kabkota=${encodeURIComponent(kabkota)}&bulan=${bulan}&tahun=${tahun}`;
@@ -158,21 +223,33 @@ export default function ShalatPage() {
         }
       } catch {}
 
-      const res = await fetch(url, { cache: "force-cache" })
-        .then((r) => (r.ok ? r.json() : null))
-        .catch(() => null);
-      if (cancelled) return;
-      if (!res || typeof res !== "object" || (res as any).code !== 200) {
-        setError("Gagal memuat jadwal shalat.");
-        setJadwal(null);
-      } else {
+      try {
+        const res = await fetch(url, { cache: "no-store" })
+          .then((r) => (r.ok ? r.json() : null))
+          .catch(() => null);
+
+        if (cancelled) return;
+
+        if (!res || typeof res !== "object" || (res as any).code !== 200) {
+          setError("Gagal memuat jadwal shalat.");
+          setJadwal(null);
+          return;
+        }
+
         setJadwal(res as JadwalResponse);
         try {
           sessionStorage.setItem(cacheId, JSON.stringify(res));
         } catch {}
+      } catch {
+        if (!cancelled) {
+          setError("Gagal memuat jadwal shalat.");
+          setJadwal(null);
+        }
+      } finally {
+        if (!cancelled) setLoadingJadwal(false);
       }
-      setLoadingJadwal(false);
     }
+
     loadJadwal();
     return () => {
       cancelled = true;
@@ -189,22 +266,24 @@ export default function ShalatPage() {
           </p>
         </div>
 
-        <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="nft-card p-6">
+        <div className="mt-10 grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="nft-card p-4 sm:p-6">
             <div className="flex items-center gap-2 text-sm font-black text-slate-900">
               <MapPin size={18} className="text-primary" />
               Lokasi
             </div>
-            <div className="mt-5 space-y-4">
+            <div className="mt-4 space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Provinsi</label>
                 <select
                   value={provinsi}
                   onChange={(e) => setProvinsi(e.target.value)}
-                  className="w-full rounded-corporate border border-border bg-background px-3 py-2.5 text-slate-700 font-semibold outline-none focus:ring-4 focus:ring-primary-focus"
+                  className="min-h-12 w-full rounded-corporate border border-border bg-background px-3 py-3 text-sm font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-primary sm:text-base"
                   disabled={loadingProv}
                 >
-                  {loadingProv ? <option>Loading...</option> : null}
+                  {loadingProv ? <option value="">Loading...</option> : null}
+                  {!loadingProv && errorProv ? <option value="">{errorProv}</option> : null}
+                  {!loadingProv && !errorProv && provinsiList.length === 0 ? <option value="">Tidak ada data</option> : null}
                   {provinsiList.map((p) => (
                     <option key={p} value={p}>
                       {p}
@@ -218,11 +297,13 @@ export default function ShalatPage() {
                 <select
                   value={kabkota}
                   onChange={(e) => setKabkota(e.target.value)}
-                  className="w-full rounded-corporate border border-border bg-background px-3 py-2.5 text-slate-700 font-semibold outline-none focus:ring-4 focus:ring-primary-focus"
+                  className="min-h-12 w-full rounded-corporate border border-border bg-background px-3 py-3 text-sm font-semibold text-slate-700 outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 sm:text-base"
                   disabled={loadingKab || !provinsi}
                 >
-                  {!kabkota ? <option value="">-- Pilih Kabupaten/Kota --</option> : null}
-                  {loadingKab ? <option>Loading...</option> : null}
+                  {!kabkota && !loadingKab ? <option value="">-- Pilih Kabupaten/Kota --</option> : null}
+                  {loadingKab ? <option value="">Loading...</option> : null}
+                  {errorKab ? <option value="">{errorKab}</option> : null}
+                  {!loadingKab && !errorKab && kabkotaList.length === 0 && provinsi ? <option value="">Tidak ada data</option> : null}
                   {kabkotaList.map((k) => (
                     <option key={k} value={k}>
                       {k}
@@ -233,18 +314,19 @@ export default function ShalatPage() {
             </div>
           </div>
 
-          <div className="nft-card p-6">
+          <div className="nft-card p-4 sm:p-6">
             <div className="flex items-center gap-2 text-sm font-black text-slate-900">
               <Calendar size={18} className="text-primary" />
               Periode
             </div>
-            <div className="mt-5 grid grid-cols-2 gap-4">
+            <div className="mt-4 grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-widest text-slate-500 mb-2">Bulan</label>
                 <select
                   value={bulan}
                   onChange={(e) => setBulan(Number(e.target.value))}
-                  className="w-full rounded-corporate border border-border bg-background px-3 py-2.5 text-slate-700 font-semibold outline-none focus:ring-4 focus:ring-primary-focus"
+                  className="w-full rounded-corporate border border-border bg-background px-3 py-3 text-sm sm:text-base text-slate-700 font-semibold outline-none focus:ring-2 focus:ring-primary"
+                  style={{ minHeight: '48px' }}
                 >
                   {MONTHS.map((m, idx) => (
                     <option key={m} value={idx + 1}>
@@ -259,7 +341,8 @@ export default function ShalatPage() {
                   value={tahun}
                   onChange={(e) => setTahun(Number(e.target.value))}
                   inputMode="numeric"
-                  className="w-full rounded-corporate border border-border bg-background px-3 py-2.5 text-slate-700 font-semibold outline-none focus:ring-4 focus:ring-primary-focus"
+                  className="w-full rounded-corporate border border-border bg-background px-3 py-3 text-sm sm:text-base text-slate-700 font-semibold outline-none focus:ring-2 focus:ring-primary"
+                  style={{ minHeight: '48px' }}
                 />
               </div>
             </div>

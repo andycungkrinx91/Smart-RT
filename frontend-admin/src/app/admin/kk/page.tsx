@@ -328,7 +328,7 @@ export default function KKPage() {
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-[1160px] w-full text-sm text-slate-700">
+          <table className="min-w-[900px] w-full text-sm text-slate-700">
             <thead className="border-b border-border bg-background">
               <tr>
                 <th

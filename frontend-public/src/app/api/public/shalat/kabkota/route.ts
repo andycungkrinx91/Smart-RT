@@ -1,38 +1,38 @@
 import { NextResponse } from 'next/server'
 
-async function fetchKabkota(provinsi: string) {
-  const endpoint = new URL('https://equran.id/api/v2/shalat/kabkota')
-  endpoint.searchParams.set('provinsi', provinsi)
+const TIMEOUT_MS = 5000
 
-  const response = await fetch(endpoint, {
-    method: 'GET',
-    headers: {
-      accept: 'application/json',
-    },
-    next: { revalidate: 60 * 60 * 24 },
-  })
-
-  const payload = (await response.json().catch(() => null)) as unknown
-  return { response, payload }
+async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS)
+  
+  try {
+    return await fetch(url, { ...options, signal: controller.signal })
+  } finally {
+    clearTimeout(timeout)
+  }
 }
 
 export async function GET(req: Request) {
   const provinsi = new URL(req.url).searchParams.get('provinsi')?.trim() || ''
-
   if (!provinsi) {
-    return NextResponse.json({ message: 'provinsi is required' }, { status: 400 })
+    return NextResponse.json({ code: 0, message: 'provinsi required', data: [] }, { status: 400 })
   }
 
   try {
-    const { response, payload } = await fetchKabkota(provinsi)
-    if (!response.ok) {
-      return NextResponse.json({ message: 'Failed to fetch cities' }, { status: response.status })
-    }
+    const response = await fetchWithTimeout('https://equran.id/api/v2/shalat/kabkota', {
+      method: 'POST',
+      headers: { accept: 'application/json', 'content-type': 'application/json' },
+      body: JSON.stringify({ provinsi }),
+      next: { revalidate: 86400 },
+    })
 
-    const out = NextResponse.json(payload)
-    out.headers.set('cache-control', 'public, max-age=0, s-maxage=86400, stale-while-revalidate=86400')
-    return out
+    const payload = (await response.json().catch(() => null)) as unknown
+    if (!response.ok) {
+      return NextResponse.json({ code: 0, message: 'Failed to load cities', data: [] }, { status: response.status })
+    }
+    return NextResponse.json(payload)
   } catch {
-    return NextResponse.json({ message: 'Prayer schedule service unavailable' }, { status: 502 })
+    return NextResponse.json({ code: 0, message: 'Service unavailable', data: [] }, { status: 502 })
   }
 }

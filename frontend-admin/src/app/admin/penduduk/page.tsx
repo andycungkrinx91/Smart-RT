@@ -295,7 +295,7 @@ export default function PendudukPage() {
 
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="min-w-[980px] w-full text-sm text-slate-700">
+          <table className="min-w-[800px] w-full text-sm text-slate-700">
             <thead className="border-b border-border bg-background">
               <tr>
                 <th
