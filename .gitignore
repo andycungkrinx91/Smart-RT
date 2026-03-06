@@ -2,6 +2,7 @@
 node_modules/
 .next/
 .pnpm/
+.pnpm-store/
 dist/
 build/
 
