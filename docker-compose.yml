@@ -27,9 +27,10 @@ services:
   backend:
     build:
       context: ./backend
+      dockerfile: Dockerfile
     container_name: smart-rt-backend
     env_file:
-      - ./backend/.env
+      - ./backend/.env.docker
     environment:
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_URL=mysql+asyncmy://smart_rt:smart_rt@db:3306/smart_rt
@@ -48,9 +49,12 @@ services:
   frontend-admin:
     build:
       context: ./frontend-admin
+      dockerfile: Dockerfile
+      args:
+        ENV_FILE: .env.docker
     container_name: smart-rt-frontend-admin
     env_file:
-      - ./frontend-admin/.env
+      - ./frontend-admin/.env.docker
     environment:
       - NODE_ENV=production
     ports:
@@ -71,18 +75,18 @@ services:
     depends_on:
       - backend
 
-  # redis:
-  #   image: redis:7.2-alpine
-  #   container_name: smart-rt-redis
-  #   command: ["redis-server", "--appendonly", "yes"]
-  #   volumes:
-  #     - redis_data:/data
-  #   restart: unless-stopped
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "ping"]
-  #     interval: 5s
-  #     timeout: 5s
-  #     retries: 5
+  redis:
+    image: redis:7.2-alpine
+    container_name: smart-rt-redis
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
 volumes:
   redis_data:

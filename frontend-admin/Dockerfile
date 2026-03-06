@@ -12,7 +12,8 @@ RUN pnpm install --frozen-lockfile
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-COPY .env .env
+# Use .env.docker if it exists, otherwise fall back to .env
+RUN if [ -f .env.docker ]; then cp .env.docker .env; fi
 RUN pnpm build
 
 # ---------- Runner ----------

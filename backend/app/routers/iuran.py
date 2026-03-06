@@ -26,13 +26,13 @@ async def data_iuran_warga(
         IuranWargaOut(
             id=i.id,
             no_kk=i.no_kk,
-            nama_kepala_keluarga=nama_kepala_keluarga,
+            nama_kepala_keluarga=nama_kepala_keluarga or "-",
             bulan=i.bulan,
             jumlah=i.jumlah,
             status_pembayaran=IuranStatus(i.status_pembayaran),
             tanggal_bayar=i.tanggal_bayar,
             metode_pembayaran=i.metode_pembayaran,
-            alamat=alamat,
+            alamat=alamat or "-",
             keterangan=i.keterangan,
             created_at=i.created_at,
         )
@@ -61,13 +61,13 @@ async def add_data_iuran_warga(payload: IuranWargaCreate, db: AsyncSession = Dep
             return IuranWargaOut(
                 id=i.id,
                 no_kk=i.no_kk,
-                nama_kepala_keluarga=nama_kepala_keluarga,
+                nama_kepala_keluarga=nama_kepala_keluarga or "-",
                 bulan=i.bulan,
                 jumlah=i.jumlah,
                 status_pembayaran=IuranStatus(i.status_pembayaran),
                 tanggal_bayar=i.tanggal_bayar,
                 metode_pembayaran=i.metode_pembayaran,
-                alamat=alamat,
+                alamat=alamat or "-",
                 keterangan=i.keterangan,
                 created_at=i.created_at,
             )
@@ -98,13 +98,13 @@ async def update_data_iuran_warga(payload: IuranWargaUpdate, db: AsyncSession = 
             return IuranWargaOut(
                 id=i.id,
                 no_kk=i.no_kk,
-                nama_kepala_keluarga=nama_kepala_keluarga,
+                nama_kepala_keluarga=nama_kepala_keluarga or "-",
                 bulan=i.bulan,
                 jumlah=i.jumlah,
                 status_pembayaran=IuranStatus(i.status_pembayaran),
                 tanggal_bayar=i.tanggal_bayar,
                 metode_pembayaran=i.metode_pembayaran,
-                alamat=alamat,
+                alamat=alamat or "-",
                 keterangan=i.keterangan,
                 created_at=i.created_at,
             )

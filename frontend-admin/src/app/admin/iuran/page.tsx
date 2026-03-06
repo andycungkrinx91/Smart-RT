@@ -941,16 +941,6 @@ export default function IuranPage() {
                     />
                   </label>
                   <label className="space-y-1 text-sm text-slate-600 sm:col-span-2">
-                    <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Alamat</span>
-                    <textarea
-                      className="input-field min-h-20"
-                      placeholder="Alamat warga"
-                      value={form.alamat}
-                      required
-                      onChange={(event) => updateForm('alamat', event.target.value)}
-                    />
-                  </label>
-                  <label className="space-y-1 text-sm text-slate-600 sm:col-span-2">
                     <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Keterangan (Opsional)</span>
                     <textarea
                       className="input-field min-h-20"

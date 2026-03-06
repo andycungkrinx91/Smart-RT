@@ -444,22 +444,9 @@ async def sum_iuran_warga_tunggakan_period(db: AsyncSession, month: int, year: i
 async def sum_iuran_warga_tunggakan_year(db: AsyncSession, year: int) -> int:
     """Sum tunggakan (belum lunas) iuran warga for a specific year.
     
-    - Current year: Sum from January to current month (year to date)
-    - Past years: Sum all 12 months (complete year)
+    Counts ALL months in the year (Jan-Dec).
     """
-    from datetime import datetime
-    now = datetime.now()
-    
-    # Determine month range
-    if year == now.year:
-        # Current year: sum from Jan to current month
-        end_month = now.month
-    else:
-        # Past years: sum all 12 months
-        end_month = 12
-    
-    # Build month range filter
-    bulan_patterns = [f"{year:04d}-{month:02d}" for month in range(1, end_month + 1)]
+    bulan_patterns = [f"{year:04d}-{month:02d}" for month in range(1, 13)]
     
     return int(
         await db.scalar(
@@ -523,22 +510,10 @@ async def count_iuran_warga_status_period(db: AsyncSession, status: IuranStatus,
 async def count_iuran_warga_status_year(db: AsyncSession, status: IuranStatus, year: int) -> int:
     """Count iuran records by payment status for a specific year.
     
-    - Current year: Count from January to current month (year to date)
-    - Past years: Count all 12 months (complete year)
+    Counts ALL months in the year (Jan-Dec).
     """
-    from datetime import datetime
-    now = datetime.now()
-    
-    # Determine month range
-    if year == now.year:
-        # Current year: count from Jan to current month
-        end_month = now.month
-    else:
-        # Past years: count all 12 months
-        end_month = 12
-    
-    # Build month range filter
-    bulan_patterns = [f"{year:04d}-{month:02d}" for month in range(1, end_month + 1)]
+    # Build month range filter for all 12 months
+    bulan_patterns = [f"{year:04d}-{month:02d}" for month in range(1, 13)]
     
     return int(
         await db.scalar(
@@ -566,22 +541,9 @@ async def sum_iuran_warga_total_period(db: AsyncSession, month: int, year: int) 
 async def sum_iuran_warga_total_year(db: AsyncSession, year: int) -> int:
     """Sum all iuran warga jumlah for a specific year that are LUNAS (paid).
     
-    - Current year: Sum from January to current month (year to date)
-    - Past years: Sum all 12 months (complete year)
+    Counts ALL months in the year (Jan-Dec).
     """
-    from datetime import datetime
-    now = datetime.now()
-    
-    # Determine month range
-    if year == now.year:
-        # Current year: sum from Jan to current month
-        end_month = now.month
-    else:
-        # Past years: sum all 12 months
-        end_month = 12
-    
-    # Build month range filter
-    bulan_patterns = [f"{year:04d}-{month:02d}" for month in range(1, end_month + 1)]
+    bulan_patterns = [f"{year:04d}-{month:02d}" for month in range(1, 13)]
     
     return int(
         await db.scalar(
@@ -655,7 +617,7 @@ async def list_iuran_warga(
     }
     stmt = (
         select(IuranWarga, DataKartuKeluarga.nama_kepala_keluarga, DataKartuKeluarga.alamat)
-        .join(DataKartuKeluarga, IuranWarga.no_kk == DataKartuKeluarga.no_kk)
+        .join(DataKartuKeluarga, IuranWarga.no_kk == DataKartuKeluarga.no_kk, isouter=True)
     )
     if year is not None and month is not None:
         # Robust exact YYYY-MM match using string comparison
