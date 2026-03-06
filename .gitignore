@@ -1,0 +1,45 @@
+# Node.js
+node_modules/
+.next/
+dist/
+build/
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.ruff_cache/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Temporary files and cache
+tmp/
+temp/
+.cache/
+.pytest_cache/
+.mypy_cache/
+
+# Uploads (backend)
+uploads/

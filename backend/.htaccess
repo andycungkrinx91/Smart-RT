@@ -1,0 +1,24 @@
+# =============================================================================
+# Smart-RT Backend - Proxy to Python App
+# =============================================================================
+
+# Enable rewrite
+RewriteEngine On
+
+# Block access to /docs and /redoc (Swagger UI)
+RewriteRule ^docs/?$ - [F,L,NC]
+RewriteRule ^redoc/?$ - [F,L,NC]
+RewriteRule ^openapi\.json$ - [F,L,NC]
+
+# Proxy to Python App (running on localhost:8001)
+# The Python App is configured in cPanel → Setup Python App
+RewriteRule ^(.*)$ http://127.0.0.1:8001/$1 [P,L]
+
+# Headers
+RequestHeader set X-Forwarded-Proto https
+RequestHeader set X-Forwarded-Host api.andy91.com
+RequestHeader set X-Forwarded-For %{REMOTE_ADDR}
+
+# Directory settings
+Options -Indexes +FollowSymLinks
+AllowOverride All

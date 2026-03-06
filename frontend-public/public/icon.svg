@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+
+    <linearGradient id="hexB" x1="20%" y1="0%" x2="80%" y2="100%">
+      <stop offset="0%"   stop-color="#5ECFEE"/>
+      <stop offset="40%"  stop-color="#1AAAD4"/>
+      <stop offset="100%" stop-color="#0572A8"/>
+    </linearGradient>
+
+    <linearGradient id="bevel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"   stop-color="#FFFFFF" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <clipPath id="hClip">
+      <polygon points="16,3 27,9.5 27,22.5 16,29 5,22.5 5,9.5"/>
+    </clipPath>
+
+  </defs>
+
+  <!-- Hex white outline glow -->
+  <polygon points="16,2 28,9 28,23 16,30 4,23 4,9"
+    fill="none" stroke="#FFFFFF" stroke-width="0.8" opacity="0.5"/>
+
+  <!-- Hex body -->
+  <polygon points="16,3 27,9.5 27,22.5 16,29 5,22.5 5,9.5"
+    fill="url(#hexB)"/>
+  <polygon points="16,3 27,9.5 27,22.5 16,29 5,22.5 5,9.5"
+    fill="url(#bevel)"/>
+
+  <!-- S cable — clipped inside hex, bold strokes for tiny size -->
+  <g clip-path="url(#hClip)">
+
+    <!-- Shadow -->
+    <path d="M 16,10 C 10,9.5 8,12 8,15 C 8,18 11,19.5 14,20 C 17,20.5 22,21 22.5,24 C 23,26.5 20.5,28 16,28"
+      fill="none" stroke="#001828" stroke-width="3.5" stroke-linecap="round" opacity="0.35" transform="translate(0.4,0.4)"/>
+
+    <!-- Outer sheath -->
+    <path d="M 16,10 C 10,9.5 8,12 8,15 C 8,18 11,19.5 14,20 C 17,20.5 22,21 22.5,24 C 23,26.5 20.5,28 16,28"
+      fill="none" stroke="#0A1E38" stroke-width="3.5" stroke-linecap="round"/>
+
+    <!-- Mid blue -->
+    <path d="M 16,10 C 10,9.5 8,12 8,15 C 8,18 11,19.5 14,20 C 17,20.5 22,21 22.5,24 C 23,26.5 20.5,28 16,28"
+      fill="none" stroke="#1A8ACC" stroke-width="2.2" stroke-linecap="round"/>
+
+    <!-- Bright cyan core -->
+    <path d="M 16,10 C 10,9.5 8,12 8,15 C 8,18 11,19.5 14,20 C 17,20.5 22,21 22.5,24 C 23,26.5 20.5,28 16,28"
+      fill="none" stroke="#5ECFEE" stroke-width="0.9" stroke-linecap="round"/>
+
+    <!-- White shimmer -->
+    <path d="M 16,10 C 11,9.5 8,11.5 8,14.5"
+      fill="none" stroke="#FFFFFF" stroke-width="0.8" stroke-linecap="round" opacity="0.6"/>
+    <path d="M 22.5,24 C 23,26 21,28 16,28"
+      fill="none" stroke="#FFFFFF" stroke-width="0.8" stroke-linecap="round" opacity="0.4"/>
+
+    <!-- TOP connector block -->
+    <rect x="12" y="7" width="8" height="4" rx="0.8" fill="#0A1E38" stroke="#5ECFEE" stroke-width="0.5"/>
+    <!-- 2 pins -->
+    <rect x="13.5" y="8" width="1.5" height="2.5" rx="0.4" fill="#5ECFEE" opacity="0.9"/>
+    <rect x="17"   y="8" width="1.5" height="2.5" rx="0.4" fill="#5ECFEE" opacity="0.9"/>
+    <!-- side tabs -->
+    <rect x="10.5" y="8.2" width="1.5" height="2" rx="0.8" fill="#1AABDD"/>
+    <rect x="20"   y="8.2" width="1.5" height="2" rx="0.8" fill="#1AABDD"/>
+
+    <!-- BOTTOM connector block -->
+    <rect x="12" y="27" width="8" height="4" rx="0.8" fill="#0A1E38" stroke="#5ECFEE" stroke-width="0.5"/>
+    <!-- 2 gold pins -->
+    <rect x="13.5" y="29" width="1.5" height="3" rx="0.4" fill="#F5C200"/>
+    <rect x="17"   y="29" width="1.5" height="3" rx="0.4" fill="#F5C200"/>
+    <!-- gold contacts -->
+    <circle cx="14.2" cy="28.2" r="0.7" fill="#FFE066" opacity="0.9"/>
+    <circle cx="17.8" cy="28.2" r="0.7" fill="#FFE066" opacity="0.9"/>
+
+  </g>
+
+</svg>

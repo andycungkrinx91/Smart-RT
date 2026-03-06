@@ -1,0 +1,286 @@
+# Smart-RT Project Generation Prompt
+
+This document outlines the prompt strategy to build the Smart-RT system, a neighborhood management platform with a FastAPI backend and Next.js admin dashboard + public website.
+
+---
+
+## Project Overview
+
+Smart-RT is a comprehensive RT/RW (neighborhood) management platform with:
+- **Backend:** FastAPI with async SQLAlchemy, MySQL/MariaDB/PostgreSQL support
+- **Frontend Admin:** Next.js 16 dashboard with Tailwind CSS 4, Framer Motion
+- **Frontend Public:** Next.js 16 public website with Quran, Hadith, Prayer Schedule features
+
+---
+
+## Phase 1: Core Infrastructure & Authentication
+
+**Goal:** Setup the backend foundation, database models, and secure stateful authentication.
+
+### Prompt:
+"Build a FastAPI backend for 'Smart-RT' with the following requirements:
+1. **Database:** Use SQLAlchemy 2.0 (async) with MySQL/MariaDB/PostgreSQL. Define models for:
+   - `User` (Admin/Management roles)
+   - `DataPenduduk` (Resident info)
+   - `DataKartuKeluarga` (Family cards)
+   - `IuranWarga` (Monthly fees)
+   - `KeuanganRT` (Financial ledger)
+   - `Blog` (News/Articles)
+   - `JadwalKegiatan` (Events)
+   - `PublicSettings` (Public website settings)
+2. **Authentication:** Implement stateful JWT authentication using Redis for session storage.
+   - Require both an `X-API-Key` header and a Bearer token.
+   - Store session IDs (jti) in Redis for instant logout/invalidation.
+   - Create a `require_role` dependency for RBAC.
+3. **Resilience:** Implement a Redis client that falls back to an in-memory store if Redis is down.
+4. **Project Structure:** Use a modular router-based structure (`app/routers`, `app/models`, `app/core`)."
+
+---
+
+## Phase 2: Real-time Features & Business Logic
+
+**Goal:** Implement the core logic for resident management and real-time dashboard updates.
+
+### Prompt:
+"Extend the Smart-RT backend with:
+1. **Business Logic:**
+   - CRUD for Residents and Family Cards.
+   - Iuran (Fee) management: When a fee is paid, automatically create a corresponding entry in the `KeuanganRT` ledger.
+2. **Real-time Stats:**
+   - Implement a Server-Sent Events (SSE) endpoint `/stats/stream`.
+   - Use Redis Pub/Sub to trigger updates. When any data (Resident, Fee, Ledger) changes, publish a message to a `stats_updates` channel.
+   - The SSE stream should push aggregated dashboard metrics (Total Residents, Monthly Income/Expense, etc.) whenever a message is received."
+
+---
+
+## Phase 3: Frontend Foundation & Admin UI
+
+**Goal:** Setup the Next.js admin portal with a modern, animated UI.
+
+### Prompt:
+"Create a Next.js 16+ (App Router) admin dashboard for Smart-RT:
+1. **Styling:** Use Tailwind CSS 4 and Framer Motion 12 for animations.
+2. **Layout:** Create a responsive sidebar layout with staggered entry animations for navigation items.
+3. **Auth Integration:**
+   - Implement a login page.
+   - Create a `fetchWithAuth` utility that handles JWT storage in localStorage and injects the `X-API-Key`.
+   - Setup an API proxy layer in Next.js to communicate with the FastAPI backend.
+4. **Real-time Dashboard:**
+   - Create a `useStatsStream` hook using `EventSource` to consume the backend SSE stream.
+   - Build a dashboard with animated metric cards and a Recharts donut chart for financial summaries."
+
+---
+
+## Phase 4: Feature Modules (Iuran, Blog, Kegiatan, KK, Keuangan)
+
+**Goal:** Build the specific management modules for the admin portal.
+
+### Prompt:
+"Implement the following modules in the Smart-RT Admin portal:
+1. **Iuran Module:** A table view with filters for month/year and payment status. Include a 'Quick Pay' modal that calls the backend fee payment endpoint.
+2. **Blog Module:** A CMS interface to create/edit articles. Support image uploads and a simple JSON-based content structure for future page building.
+3. ** Kegiatan Module:** A calendar or list view for neighborhood events with status badges (Scheduled, Ongoing, Completed).
+4. **KK Module:** Data Kartu Keluarga management with relation to residents.
+5. **Keuangan Module:** Financial ledger with income/expense tracking.
+6. **User Management:** A profile page to update admin credentials and a management view to add/remove staff accounts."
+
+---
+
+## Phase 5: Public Website (frontend-public)
+
+**Goal:** Build the public-facing website with Islamic content.
+
+### Prompt:
+"Create a Next.js 16+ public website for Smart-RT:
+1. **Routing:** Use App Router with pages for home, blog, Quran, Hadith, Prayer Schedule.
+2. **API Proxies:** Implement proxy routes that forward requests to external APIs:
+   - `/api/public/blogs` → Backend blog endpoints
+   - `/api/public/quran/surat` → EQuran API (list surahs)
+   - `/api/public/quran/surat/{nomor}` → EQuran API (surah detail + audio)
+   - `/api/public/quran/tafsir/{nomor}` → EQuran API (tafsir)
+   - `/api/public/hadith/kategori` → HadeethEnc API
+   - `/api/public/hadith/hadist` → HadeethEnc API (hadith list)
+   - `/api/public/hadith/hadist/{id}` → HadeethEnc API (hadith detail)
+   - `/api/public/shalat/provinsi` → EQuran API (prayer schedule provinces)
+   - `/api/public/shalat/kabkota` → EQuran API (cities)
+   - `/api/public/shalat` → EQuran API (monthly schedule)
+3. **Styling:** Use Tailwind CSS 4 with theme color customization stored in localStorage.
+4. **Settings Integration:** Fetch homepage/about content from backend public settings.
+5. **Storage Proxy:** Route `/storage/*` to backend for media assets."
+
+---
+
+## Complete Project Structure
+
+```
+Smart-RT/
+├── backend/                    # FastAPI REST API + SSE
+│   ├── app/
+│   │   ├── main.py            # FastAPI app entry
+│   │   ├── models.py          # SQLAlchemy models
+│   │   ├── schemas.py         # Pydantic schemas
+│   │   ├── crud.py            # Database operations
+│   │   ├── deps.py            # Dependencies
+│   │   ├── routers/           # API endpoints
+│   │   │   ├── auth.py        # Login/logout
+│   │   │   ├── users.py       # User management
+│   │   │   ├── penduduk.py   # Residents CRUD
+│   │   │   ├── kartukeluarga.py # KK CRUD
+│   │   │   ├── iuran.py       # Fees management
+│   │   │   ├── keuangan.py    # Financial ledger
+│   │   │   ├── kegiatan.py    # Events
+│   │   │   ├── blogs.py       # Articles
+│   │   │   ├── stats.py       # Dashboard stats + SSE
+│   │   │   ├── settings.py    # Public settings
+│   │   │   └── me.py          # Current user profile
+│   │   └── core/
+│   │       ├── config.py      # App configuration
+│   │       ├── database.py    # DB connection
+│   │       ├── security.py    # JWT/auth
+│   │       ├── redis_client.py # Redis with fallback
+│   │       ├── storage.py     # File storage
+│   │       └── sanitize.py    # Input sanitization
+│   ├── scripts/               # Utility scripts
+│   ├── requirements.txt
+│   ├── Dockerfile
+│   └── .env.example
+│
+├── frontend-admin/            # Next.js Admin Dashboard
+│   ├── src/
+│   │   ├── app/              # App Router pages
+│   │   │   ├── login/       # Login page
+│   │   │   ├── admin/        # Protected admin pages
+│   │   │   │   ├── page.tsx          # Dashboard
+│   │   │   │   ├── penduduk/         # Residents
+│   │   │   │   ├── kk/               # Family cards
+│   │   │   │   ├── iuran/            # Fees
+│   │   │   │   ├── keuangan/         # Finance
+│   │   │   │   ├── kegiatan/         # Events
+│   │   │   │   ├── blog/             # Articles
+│   │   │   │   ├── pengguna/         # Users
+│   │   │   │   ├── profile/          # Profile
+│   │   │   │   └── pengaturan/       # Settings
+│   │   │   └── api/          # API proxy routes
+│   │   │       ├── auth/
+│   │   │       ├── profile/
+│   │   │       ├── users/
+│   │   │       ├── penduduk/
+│   │   │       ├── kk/
+│   │   │       ├── iuran/
+│   │   │       ├── keuangan/
+│   │   │       ├── kegiatan/
+│   │   │       ├── blogs/
+│   │   │       ├── stats/
+│   │   │       └── settings/
+│   │   ├── components/       # React components
+│   │   │   ├── layout/      # Sidebar, nav
+│   │   │   ├── ui/          # Reusable UI
+│   │   │   ├── dashboard/   # Dashboard widgets
+│   │   │   ├── table/       # Table components
+│   │   │   ├── auth/        # Auth components
+│   │   │   └── profile/     # Profile components
+│   │   ├── hooks/            # Custom hooks
+│   │   │   ├── useStatsStream.ts
+│   │   │   ├── useThemeColor.ts
+│   │   │   └── useJakartaClock.ts
+│   │   └── lib/              # Utilities
+│   │       ├── api.ts
+│   │       ├── auth.ts
+│   │       ├── backend.ts
+│   │       ├── theme.ts
+│   │       └── format.ts
+│   ├── next.config.ts
+│   ├── tailwind.config.ts
+│   └── package.json
+│
+└── frontend-public/           # Next.js Public Website
+    ├── src/
+    │   ├── app/              # App Router pages
+    │   │   ├── page.tsx     # Homepage
+    │   │   ├── blog/        # Blog list & detail
+    │   │   ├── quran/       # Quran surahs
+    │   │   ├── hadith/      # Hadith collection
+    │   │   ├── jadwal-shalat/ # Prayer schedule
+    │   │   └── tentang/     # About page
+    │   └── components/       # React components
+    └── package.json
+```
+
+---
+
+## Environment Variables
+
+### Backend (.env)
+```
+DATABASE_URL=mysql+pymysql://user:pass@localhost:3306/smartrt
+API_KEY=your-secure-api-key
+JWT_SECRET_KEY=your-jwt-secret
+JWT_ALGORITHM=HS256
+JWT_EXPIRE_MINUTES=1440
+REDIS_URL=redis://localhost:6379
+UPLOAD_DIR=./uploads
+```
+
+### Frontend Admin (.env)
+```
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+NEXT_PUBLIC_API_KEY=your-secure-api-key
+```
+
+### Frontend Public (.env)
+```
+NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
+NEXT_PUBLIC_API_KEY=your-secure-api-key
+NEXT_PUBLIC_QURAN_API_URL=https://api.equran.id
+NEXT_PUBLIC_HADITH_API_URL=https://hadith-api.vercel.app
+```
+
+---
+
+## Running the Application
+
+### Backend
+```bash
+cd backend
+cp .env.example .env
+uv venv && source .venv/bin/activate
+uv pip install -r requirements.txt
+uvicorn app.main:app --reload
+# API: http://localhost:8000
+# Docs: http://localhost:8000/docs
+```
+
+### Frontend Admin
+```bash
+cd frontend-admin
+pnpm install
+pnpm dev
+# Admin: http://localhost:3000
+```
+
+### Frontend Public
+```bash
+cd frontend-public
+pnpm install
+pnpm dev
+# Public: http://localhost:3001
+```
+
+---
+
+## Key Features Summary
+
+| Feature | Backend | Frontend Admin | Frontend Public |
+|---------|---------|----------------|-----------------|
+| Authentication | JWT + Redis sessions | Login + AuthGuard | - |
+| Residents | CRUD | Table + Forms | - |
+| Family Cards (KK) | CRUD | Table + Forms | - |
+| Iuran/Fees | CRUD + auto-ledger | Quick Pay modal | - |
+| Finance | CRUD | Ledger view | - |
+| Activities | CRUD | Calendar/List | - |
+| Blog/Articles | CRUD + Upload | CMS interface | List + Detail |
+| Real-time Stats | SSE + Redis Pub/Sub | Live dashboard | - |
+| Settings | Public API | Admin forms | Homepage content |
+| Quran | - | - | Surahs + Tafsir + Audio |
+| Hadith | - | - | Collections + Detail |
+| Prayer Schedule | - | - | Monthly schedule |

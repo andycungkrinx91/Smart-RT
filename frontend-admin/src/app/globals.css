@@ -1,0 +1,130 @@
+@import "tailwindcss";
+
+:root {
+  --color-brand: #1e90ff;
+  --color-brand-light: #e7f2ff;
+}
+
+@theme inline {
+  --color-primary: var(--color-brand);
+  --color-primary-hover: color-mix(in srgb, var(--color-brand) 82%, black);
+  --color-primary-focus: color-mix(in srgb, var(--color-brand) 24%, transparent);
+}
+
+@theme {
+  /* Typography */
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* Corporate Color Palette */
+  --color-background: #f1f4f6; /* Classic dashboard light gray */
+  --color-surface: #ffffff;    /* Pure white for cards/header */
+  
+  --color-border: #e9ecef;
+  --color-border-light: #f8f9fa;
+
+  /* Text Colors */
+  --color-slate-900: #343a40; /* Headings */
+  --color-slate-700: #495057; /* Body text */
+  --color-slate-500: #6c757d; /* Muted text/Icons */
+
+  /* ArchitectUI Signature Soft Shadows */
+  --shadow-card: 0 0.46875rem 2.1875rem rgba(4,9,20,0.03), 0 0.9375rem 1.40625rem rgba(4,9,20,0.03), 0 0.25rem 0.53125rem rgba(4,9,20,0.05), 0 0.125rem 0.1875rem rgba(4,9,20,0.03);
+  --shadow-header: 0 0.125rem 0.625rem rgba(0,0,0,0.05);
+
+  /* Structured, sharp corners */
+  --radius-corporate: 0.25rem;
+
+  /* ── Custom Animations ───────────────────────────────────── */
+  --animate-slide-in-right: slide-in-right 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-fade-in: fade-in 0.25s ease-out both;
+  --animate-scale-in: scale-in 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  --animate-shrink-width: shrink-width linear both;
+
+  @keyframes slide-in-right {
+    from {
+      opacity: 0;
+      transform: translateX(110%);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.88);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes shrink-width {
+    from { width: 100%; }
+    to   { width: 0%; }
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-slate-700 font-sans antialiased h-full;
+  }
+  html {
+    @apply h-full;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-slate-900 font-medium;
+  }
+}
+
+.card {
+  @apply bg-surface rounded-corporate shadow-card border border-border/60 overflow-hidden flex flex-col;
+}
+
+.modal-content {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center px-5 py-2.5 rounded-corporate font-medium text-sm transition-all duration-200 bg-primary text-white hover:bg-primary-hover hover:shadow-md focus:outline-none focus:ring-4 focus:ring-primary-focus active:scale-[0.98];
+}
+
+.input-field {
+  @apply w-full bg-background border border-border rounded-corporate py-2.5 pr-4 text-slate-700 placeholder-slate-400 outline-none transition-all focus:ring-2 focus:ring-primary-focus focus:border-primary;
+}
+
+.status-badge {
+  @apply px-2.5 py-1 rounded-full text-xs font-medium border;
+}
+
+.status-badge-active {
+  @apply bg-green-100 text-green-700 border-green-200;
+}
+
+.status-badge-inactive {
+  @apply bg-red-100 text-red-700 border-red-200;
+}
+
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(28%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-tick {
+  animation: slideUpFade 360ms ease-out;
+}

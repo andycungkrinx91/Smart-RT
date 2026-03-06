@@ -1,0 +1,90 @@
+services:
+  # === Database (MySQL / MariaDB / PostgreSQL) ===
+  # Ganti image di bawah sesuai kebutuhan:
+  # - MySQL: mysql:8.0
+  # - MariaDB: mariadb:10.11
+  # - PostgreSQL: postgres:15-alpine
+  db:
+    image: mysql:8.0
+    container_name: smart-rt-db
+    environment:
+      MYSQL_DATABASE: smart_rt
+      MYSQL_USER: smart_rt
+      MYSQL_PASSWORD: smart_rt
+      MYSQL_ROOT_PASSWORD: root
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "smart_rt", "--password=smart_rt"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./backend
+    container_name: smart-rt-backend
+    env_file:
+      - ./backend/.env
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=mysql+asyncmy://smart_rt:smart_rt@db:3306/smart_rt
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app
+      - image_data:/app/storage
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend-admin:
+    build:
+      context: ./frontend-admin
+    container_name: smart-rt-frontend-admin
+    env_file:
+      - ./frontend-admin/.env
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+  frontend-public:
+    build:
+      context: ./frontend-public
+    container_name: smart-rt-frontend-public
+    env_file:
+      - ./frontend-public/.env
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "3001:3000"
+    depends_on:
+      - backend
+
+  # redis:
+  #   image: redis:7.2-alpine
+  #   container_name: smart-rt-redis
+  #   command: ["redis-server", "--appendonly", "yes"]
+  #   volumes:
+  #     - redis_data:/data
+  #   restart: unless-stopped
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  redis_data:
+  mysql_data:
+  image_data:

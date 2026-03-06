@@ -1,0 +1,166 @@
+@import "tailwindcss";
+
+:root {
+  --color-brand: #1e90ff;
+  --color-brand-light: #e7f2ff;
+  --color-brand-accent: #0b5ed7;
+  --header-h: 5.5rem;
+}
+
+@theme inline {
+  --color-primary: var(--color-brand);
+  --color-primary-hover: color-mix(in srgb, var(--color-brand) 82%, black);
+  --color-primary-focus: color-mix(in srgb, var(--color-brand) 24%, transparent);
+}
+
+@theme {
+  /* Typography */
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* Corporate light palette (align with frontend-admin) */
+  --color-background: #f1f4f6;
+  --color-surface: #ffffff;
+
+  --color-border: #e9ecef;
+  --color-border-light: #f8f9fa;
+
+  /* Text Colors */
+  --color-slate-900: #343a40;
+  --color-slate-700: #495057;
+  --color-slate-500: #6c757d;
+
+  /* Shadows */
+  --shadow-card: 0 0.46875rem 2.1875rem rgba(4,9,20,0.03), 0 0.9375rem 1.40625rem rgba(4,9,20,0.03), 0 0.25rem 0.53125rem rgba(4,9,20,0.05), 0 0.125rem 0.1875rem rgba(4,9,20,0.03);
+  --shadow-header: 0 0.125rem 0.625rem rgba(0,0,0,0.05);
+
+  /* Rounded */
+  --radius-corporate: 0.25rem;
+
+  /* Animations */
+  --animate-fade-in: fade-in 0.25s ease-out both;
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+}
+
+@layer base {
+  html {
+    font-size: 14px;
+  }
+  body {
+    @apply bg-background text-slate-700 font-sans antialiased selection:bg-primary/20 selection:text-slate-900 h-full;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply text-slate-900 font-medium tracking-tight;
+  }
+}
+
+.font-arabic {
+  font-family: var(--font-arabic), ui-serif, Georgia, "Times New Roman", serif;
+}
+
+.container-custom {
+  @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+}
+
+/* NFT Style Components */
+.glass-nav {
+  @apply relative isolate border-b;
+  position: sticky;
+  top: 0;
+  border-color: color-mix(in srgb, var(--color-brand) 36%, white);
+  background-image:
+    radial-gradient(1100px 260px at 10% -40%, color-mix(in srgb, var(--color-brand) 55%, white) 0%, transparent 62%),
+    radial-gradient(900px 240px at 92% -35%, color-mix(in srgb, var(--color-brand) 42%, white) 0%, transparent 64%),
+    linear-gradient(
+      112deg,
+      color-mix(in srgb, var(--color-brand), black 18%) 0%,
+      color-mix(in srgb, var(--color-brand), black 28%) 42%,
+      color-mix(in srgb, var(--color-brand), black 10%) 100%
+    );
+  box-shadow: var(--shadow-header), inset 0 1px 0 color-mix(in srgb, white 28%, transparent);
+}
+
+.glass-nav::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: -1;
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, white 10%, transparent) 0%,
+    transparent 28%,
+    transparent 72%,
+    color-mix(in srgb, white 8%, transparent) 100%
+  );
+}
+
+.glass-nav-scrolled {
+  border-color: color-mix(in srgb, var(--color-brand) 48%, white);
+  background-image:
+    radial-gradient(1100px 260px at 10% -40%, color-mix(in srgb, var(--color-brand) 62%, white) 0%, transparent 60%),
+    radial-gradient(900px 240px at 92% -35%, color-mix(in srgb, var(--color-brand) 48%, white) 0%, transparent 62%),
+    linear-gradient(
+      112deg,
+      color-mix(in srgb, var(--color-brand), black 10%) 0%,
+      color-mix(in srgb, var(--color-brand), black 20%) 45%,
+      color-mix(in srgb, var(--color-brand), black 4%) 100%
+    );
+}
+
+.header-nav-item {
+  @apply inline-flex items-center rounded-xl px-4 py-2 text-base font-semibold transition-all duration-200;
+}
+
+.header-nav-item-idle {
+  color: color-mix(in srgb, white 88%, var(--color-brand));
+}
+
+.header-nav-item-idle:hover {
+  color: #ffffff;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-brand) 28%, white) 0%,
+    color-mix(in srgb, var(--color-brand) 70%, black) 100%
+  );
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--color-brand) 40%, transparent);
+}
+
+.header-nav-item-active {
+  color: #ffffff;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--color-brand) 35%, white) 0%,
+    color-mix(in srgb, var(--color-brand) 78%, black) 100%
+  );
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--color-brand) 45%, transparent);
+}
+
+.footer-accent {
+  color: color-mix(in srgb, var(--color-brand) 78%, black);
+}
+
+.nft-card {
+  @apply bg-surface rounded-corporate shadow-card border border-border/60 overflow-hidden;
+}
+
+.btn-nft-primary {
+  @apply inline-flex items-center justify-center px-5 py-2.5 rounded-corporate font-medium text-sm transition-all duration-200 bg-primary text-white hover:bg-primary-hover hover:shadow-md focus:outline-none focus:ring-4 focus:ring-primary-focus active:scale-[0.98];
+}
+
+.btn-nft-outline {
+  @apply inline-flex items-center justify-center px-5 py-2.5 rounded-corporate font-medium text-sm transition-all duration-200 border border-border bg-surface text-slate-700 hover:border-primary hover:text-primary hover:shadow-sm active:scale-[0.98];
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(to right, var(--color-primary), var(--color-brand-accent));
+}
+
+.ambient-glow {
+  @apply absolute -z-10 w-[520px] h-[520px] rounded-full blur-[120px] opacity-25;
+}
