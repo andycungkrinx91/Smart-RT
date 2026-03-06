@@ -6,6 +6,8 @@ import { TablePagination } from '@/components/table/TablePagination'
 import { fetchWithAuth } from '@/lib/client-api'
 import { getUserFriendlyApiError, toUserFriendlyMessage } from '@/lib/user-friendly-error'
 
+type KKStatusWarga = 'permanen' | 'pendatang' | 'nonaktif'
+
 type KKItem = {
   id: number
   no_kk: string
@@ -18,7 +20,7 @@ type KKItem = {
   kecamatan: string
   kabupaten: string
   kodepos: string
-  status_warga: string
+  status_warga: KKStatusWarga
   asal_kota: string
   created_at: string
 }
@@ -34,7 +36,7 @@ type KKForm = {
   kecamatan: string
   kabupaten: string
   kodepos: string
-  status_warga: string
+  status_warga: KKStatusWarga
   asal_kota: string
 }
 
@@ -56,11 +58,17 @@ const emptyForm: KKForm = {
   kecamatan: '',
   kabupaten: '',
   kodepos: '',
-  status_warga: '',
+  status_warga: 'permanen',
   asal_kota: '',
 }
 
 const ROWS_PER_PAGE = 20
+
+const statusWargaLabel: Record<KKStatusWarga, string> = {
+  'permanen': 'Permanen',
+  'pendatang': 'Pendatang',
+  'nonaktif': 'Nonaktif'
+}
 
 function toForm(item: KKItem): KKForm {
   return {
@@ -74,7 +82,7 @@ function toForm(item: KKItem): KKForm {
     kecamatan: item.kecamatan,
     kabupaten: item.kabupaten,
     kodepos: item.kodepos,
-    status_warga: item.status_warga,
+    status_warga: item.status_warga.toLowerCase() as KKStatusWarga,
     asal_kota: item.asal_kota,
   }
 }
@@ -133,7 +141,9 @@ export default function KKPage() {
       }
 
       const data = (await response.json()) as KKItem[]
-      setItems(data)
+      // Convert status_warga to lowercase for frontend
+      const normalizedData = data.map((item) => ({ ...item, status_warga: item.status_warga.toLowerCase() as KKStatusWarga }))
+      setItems(normalizedData)
     } catch (error) {
       setErrorMessage(toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, data kartu keluarga belum bisa dimuat.'))
     } finally {
@@ -208,7 +218,18 @@ export default function KKPage() {
 
     try {
       const isEdit = modalMode === 'edit' && selectedItem
-      const payload = isEdit ? { id: selectedItem.id, ...form } : form
+
+      // Convert status_warga to proper case for backend
+      const statusWargaMap: Record<KKStatusWarga, string> = {
+        'permanen': 'Permanen',
+        'pendatang': 'Pendatang',
+        'nonaktif': 'Nonaktif'
+      }
+      const normalizedForm = {
+        ...form,
+        status_warga: statusWargaMap[form.status_warga]
+      }
+      const payload = isEdit ? { id: selectedItem.id, ...normalizedForm } : normalizedForm
 
       const response = await fetchWithAuth('/api/kk', {
         method: isEdit ? 'PUT' : 'POST',
@@ -221,10 +242,12 @@ export default function KKPage() {
       }
 
       const saved = (await response.json()) as KKItem
+      // Convert status_warga to lowercase for frontend
+      const normalizedSaved = { ...saved, status_warga: saved.status_warga.toLowerCase() as KKStatusWarga }
       if (isEdit) {
-        setItems((prev) => prev.map((item) => (item.id === saved.id ? saved : item)))
+        setItems((prev) => prev.map((item) => (item.id === normalizedSaved.id ? normalizedSaved : item)))
       } else {
-        setItems((prev) => [saved, ...prev])
+        setItems((prev) => [normalizedSaved, ...prev])
         setCurrentPage(1)
       }
       closeModal()
@@ -509,7 +532,7 @@ export default function KKPage() {
                 <div className="space-y-1">
                   <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status Warga</p>
                   <div className="rounded-corporate border border-border bg-background px-3 py-2 text-sm text-slate-700">
-                    {selectedItem.status_warga}
+                    {statusWargaLabel[selectedItem.status_warga] || selectedItem.status_warga}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -626,13 +649,16 @@ export default function KKPage() {
                   </label>
                   <label className="space-y-1 text-sm text-slate-600">
                     <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Status Warga</span>
-                    <input
+                    <select
                       className="input-field"
                       value={form.status_warga}
-                      maxLength={16}
                       required
-                      onChange={(event) => updateForm('status_warga', event.target.value)}
-                    />
+                      onChange={(event) => updateForm('status_warga', event.target.value as KKStatusWarga)}
+                    >
+                      <option value="permanen">Permanen</option>
+                      <option value="pendatang">Pendatang</option>
+                      <option value="nonaktif">Nonaktif</option>
+                    </select>
                   </label>
                   <label className="space-y-1 text-sm text-slate-600">
                     <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Asal Kota</span>
