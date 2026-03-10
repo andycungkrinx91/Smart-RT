@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, Eye, Plus, SquarePen as Edit, Trash2 as Trash, 
 import { TablePagination } from '@/components/table/TablePagination'
 import { fetchWithAuth } from '@/lib/client-api'
 import { getUserFriendlyApiError, toUserFriendlyMessage } from '@/lib/user-friendly-error'
+import { ToastContainer, useToast } from '@/components/ui/Toast'
 
 type PendudukStatus = 'aktif' | 'nonaktif'
 
@@ -78,6 +79,9 @@ export default function PendudukPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
+
+  // ── Toast system ──────────────────────────────────────────────────────────
+  const { toasts, showToast, dismissToast } = useToast()
 
   const [nameFilter, setNameFilter] = useState('')
   const [nikFilter, setNikFilter] = useState('')
@@ -213,13 +217,15 @@ export default function PendudukPage() {
       const normalizedSaved = { ...saved, status: saved.status.toLowerCase() as PendudukStatus }
       if (isEdit) {
         setItems((prev) => prev.map((item) => (item.id === normalizedSaved.id ? normalizedSaved : item)))
+        showToast('success', 'Data penduduk berhasil diperbarui.')
       } else {
         setItems((prev) => [normalizedSaved, ...prev])
         setCurrentPage(1)
+        showToast('success', 'Data penduduk berhasil ditambahkan.')
       }
       closeModal()
     } catch (error) {
-      setErrorMessage(toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, terjadi kendala saat menyimpan data penduduk.'))
+      showToast('error', toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, terjadi kendala saat menyimpan data penduduk.'))
     } finally {
       setIsSaving(false)
     }
@@ -240,8 +246,9 @@ export default function PendudukPage() {
       }
 
       setItems((prev) => prev.filter((row) => row.id !== item.id))
+      showToast('success', 'Data penduduk berhasil dihapus.')
     } catch (error) {
-      setErrorMessage(toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, data penduduk belum bisa dihapus sekarang.'))
+      showToast('error', toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, data penduduk belum bisa dihapus sekarang.'))
     } finally {
       setDeletingId(null)
     }
@@ -535,6 +542,9 @@ export default function PendudukPage() {
           </div>
         </div>
       ) : null}
+
+      {/* ── Toast portal ────────────────────────────────────────────────────────── */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }

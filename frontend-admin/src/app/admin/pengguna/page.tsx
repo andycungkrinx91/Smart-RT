@@ -5,6 +5,7 @@ import { Edit, Eye, Plus, Trash, X } from 'lucide-react'
 import { DEFAULT_ROWS_PER_PAGE, TablePagination } from '@/components/table/TablePagination'
 import { fetchWithAuth } from '@/lib/client-api'
 import { getUserFriendlyApiError, toUserFriendlyMessage } from '@/lib/user-friendly-error'
+import { ToastContainer, useToast } from '@/components/ui/Toast'
 
 type UserRole = 'Administrator' | 'Management'
 
@@ -76,6 +77,9 @@ export default function PenggunaPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
+
+  // ── Toast system ──────────────────────────────────────────────────────────
+  const { toasts, showToast, dismissToast } = useToast()
 
   const [nameFilter, setNameFilter] = useState('')
   const [emailFilter, setEmailFilter] = useState('')
@@ -207,13 +211,15 @@ export default function PenggunaPage() {
       const saved = (await response.json()) as UserItem
       if (isEdit) {
         setItems((prev) => prev.map((item) => (item.userid === saved.userid ? saved : item)))
+        showToast('success', 'Data pengguna berhasil diperbarui.')
       } else {
         setItems((prev) => [saved, ...prev])
         setCurrentPage(1)
+        showToast('success', 'Pengguna baru berhasil ditambahkan.')
       }
       closeModal()
     } catch (error) {
-      setErrorMessage(toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, terjadi kendala saat menyimpan data pengguna.'))
+      showToast('error', toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, terjadi kendala saat menyimpan data pengguna.'))
     } finally {
       setIsSaving(false)
     }
@@ -234,8 +240,9 @@ export default function PenggunaPage() {
       }
 
       setItems((prev) => prev.filter((row) => row.userid !== item.userid))
+      showToast('success', 'Pengguna berhasil dihapus.')
     } catch (error) {
-      setErrorMessage(toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, data pengguna belum bisa dihapus sekarang.'))
+      showToast('error', toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, data pengguna belum bisa dihapus sekarang.'))
     } finally {
       setDeletingId(null)
     }
@@ -511,6 +518,9 @@ export default function PenggunaPage() {
           </div>
         </div>
       ) : null}
+
+      {/* ── Toast portal ────────────────────────────────────────────────────────── */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }

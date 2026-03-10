@@ -76,32 +76,32 @@ class PendudukOut(BaseModel):
 class KKCreate(BaseModel):
     no_kk: str = Field(min_length=16, max_length=16, pattern=r"^\d{16}$")
     nik: str = Field(min_length=16, max_length=16, pattern=r"^\d{16}$")
-    nama_kepala_keluarga: str = Field(min_length=1, max_length=16)
+    nama_kepala_keluarga: str = Field(min_length=1, max_length=64)
     alamat: str = Field(min_length=1, max_length=2000)
     rt: str = Field(min_length=1, max_length=3, pattern=r"^\d{1,3}$")
     rw: str = Field(min_length=1, max_length=3, pattern=r"^\d{1,3}$")
-    kelurahan: str = Field(min_length=1, max_length=16)
-    kecamatan: str = Field(min_length=1, max_length=16)
-    kabupaten: str = Field(min_length=1, max_length=16)
+    kelurahan: str = Field(min_length=1, max_length=64)
+    kecamatan: str = Field(min_length=1, max_length=64)
+    kabupaten: str = Field(min_length=1, max_length=64)
     kodepos: str = Field(min_length=6, max_length=6, pattern=r"^\d{6}$")
     status_warga: str = Field(min_length=1, max_length=16)
-    asal_kota: str = Field(min_length=1, max_length=16)
+    asal_kota: str = Field(min_length=1, max_length=64)
 
 
 class KKUpdate(BaseModel):
     id: int
     no_kk: str | None = Field(default=None, min_length=16, max_length=16, pattern=r"^\d{16}$")
     nik: str | None = Field(default=None, min_length=16, max_length=16, pattern=r"^\d{16}$")
-    nama_kepala_keluarga: str | None = Field(default=None, min_length=1, max_length=16)
+    nama_kepala_keluarga: str | None = Field(default=None, min_length=1, max_length=64)
     alamat: str | None = Field(default=None, min_length=1, max_length=2000)
     rt: str | None = Field(default=None, min_length=1, max_length=3, pattern=r"^\d{1,3}$")
     rw: str | None = Field(default=None, min_length=1, max_length=3, pattern=r"^\d{1,3}$")
-    kelurahan: str | None = Field(default=None, min_length=1, max_length=16)
-    kecamatan: str | None = Field(default=None, min_length=1, max_length=16)
-    kabupaten: str | None = Field(default=None, min_length=1, max_length=16)
+    kelurahan: str | None = Field(default=None, min_length=1, max_length=64)
+    kecamatan: str | None = Field(default=None, min_length=1, max_length=64)
+    kabupaten: str | None = Field(default=None, min_length=1, max_length=64)
     kodepos: str | None = Field(default=None, min_length=6, max_length=6, pattern=r"^\d{6}$")
     status_warga: str | None = Field(default=None, min_length=1, max_length=16)
-    asal_kota: str | None = Field(default=None, min_length=1, max_length=16)
+    asal_kota: str | None = Field(default=None, min_length=1, max_length=64)
 
 
 class KKOut(BaseModel):

@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -42,21 +43,29 @@ async def data_kk(
 
 @router.post("/adddatakartukeluarga", response_model=KKOut)
 async def add_data_kk(payload: KKCreate, db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
-    obj = await add_kk(
-        db,
-        no_kk=payload.no_kk,
-        nik=payload.nik,
-        nama_kepala_keluarga=payload.nama_kepala_keluarga,
-        alamat=payload.alamat,
-        rt=payload.rt,
-        rw=payload.rw,
-        kelurahan=payload.kelurahan,
-        kecamatan=payload.kecamatan,
-        kabupaten=payload.kabupaten,
-        kodepos=payload.kodepos,
-        status_warga=payload.status_warga,
-        asal_kota=payload.asal_kota,
-    )
+    try:
+        obj = await add_kk(
+            db,
+            no_kk=payload.no_kk,
+            nik=payload.nik,
+            nama_kepala_keluarga=payload.nama_kepala_keluarga,
+            alamat=payload.alamat,
+            rt=payload.rt,
+            rw=payload.rw,
+            kelurahan=payload.kelurahan,
+            kecamatan=payload.kecamatan,
+            kabupaten=payload.kabupaten,
+            kodepos=payload.kodepos,
+            status_warga=payload.status_warga,
+            asal_kota=payload.asal_kota,
+        )
+    except IntegrityError as e:
+        if "Duplicate entry" in str(e) and "no_kk" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"No. KK '{payload.no_kk}' sudah terdaftar",
+            )
+        raise
     await notify_stats_changed()
     return KKOut(
         id=obj.id,

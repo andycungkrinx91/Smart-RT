@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { AnimatePresence, motion, type Variants } from 'framer-motion'
 import { fetchWithAuth } from '@/lib/client-api'
 import { toUserFriendlyMessage } from '@/lib/user-friendly-error'
+import { ToastContainer, useToast } from '@/components/ui/Toast'
 import {
   AlignCenter,
   AlignJustify,
@@ -170,6 +171,9 @@ export default function BlogPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null)
   const [listError, setListError] = useState<string | null>(null)
   const [formError, setFormError] = useState<string | null>(null)
+
+  // ── Toast system ──────────────────────────────────────────────────────────
+  const { toasts, showToast, dismissToast } = useToast()
 
   const [modalMode, setModalMode] = useState<BlogModalMode>(null)
   const [selectedBlog, setSelectedBlog] = useState<BlogItem | null>(null)
@@ -524,10 +528,11 @@ export default function BlogPage() {
         throw new Error(getApiError(payload, 'Maaf, terjadi kendala saat menyimpan blog.'))
       }
 
+      showToast('success', modalMode === 'create' ? 'Blog berhasil ditambahkan.' : 'Blog berhasil diperbarui.')
       resetModalState()
       await loadBlogs(true)
     } catch (err) {
-      setFormError(toUserFriendlyMessage(err instanceof Error ? err.message : null, 'Maaf, terjadi kendala saat menyimpan blog.'))
+      showToast('error', toUserFriendlyMessage(err instanceof Error ? err.message : null, 'Maaf, terjadi kendala saat menyimpan blog.'))
     } finally {
       setIsSaving(false)
     }
@@ -552,8 +557,9 @@ export default function BlogPage() {
         throw new Error(getApiError(payload, 'Maaf, data blog belum bisa dihapus sekarang.'))
       }
       await loadBlogs(true)
+      showToast('success', 'Blog berhasil dihapus.')
     } catch (err) {
-      setListError(toUserFriendlyMessage(err instanceof Error ? err.message : null, 'Maaf, data blog belum bisa dihapus sekarang.'))
+      showToast('error', toUserFriendlyMessage(err instanceof Error ? err.message : null, 'Maaf, data blog belum bisa dihapus sekarang.'))
     } finally {
       setDeleteId(null)
     }
@@ -1007,6 +1013,9 @@ export default function BlogPage() {
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      {/* ── Toast portal ────────────────────────────────────────────────────────── */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }

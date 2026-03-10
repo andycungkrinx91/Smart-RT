@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp, Edit, Eye, Plus, Trash, X } from 'lucide-react'
 import { TablePagination } from '@/components/table/TablePagination'
 import { fetchWithAuth } from '@/lib/client-api'
 import { getUserFriendlyApiError, toUserFriendlyMessage } from '@/lib/user-friendly-error'
+import { ToastContainer, useToast } from '@/components/ui/Toast'
 
 type KKStatusWarga = 'permanen' | 'pendatang' | 'nonaktif'
 
@@ -103,6 +104,9 @@ export default function KKPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
+
+  // ── Toast system ──────────────────────────────────────────────────────────
+  const { toasts, showToast, dismissToast } = useToast()
 
   const [nameFilter, setNameFilter] = useState('')
   const [identityFilter, setIdentityFilter] = useState('')
@@ -246,13 +250,15 @@ export default function KKPage() {
       const normalizedSaved = { ...saved, status_warga: saved.status_warga.toLowerCase() as KKStatusWarga }
       if (isEdit) {
         setItems((prev) => prev.map((item) => (item.id === normalizedSaved.id ? normalizedSaved : item)))
+        showToast('success', 'Data kartu keluarga berhasil diperbarui.')
       } else {
         setItems((prev) => [normalizedSaved, ...prev])
         setCurrentPage(1)
+        showToast('success', 'Data kartu keluarga berhasil ditambahkan.')
       }
       closeModal()
     } catch (error) {
-      setErrorMessage(toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, terjadi kendala saat menyimpan data kartu keluarga.'))
+      showToast('error', toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, terjadi kendala saat menyimpan data kartu keluarga.'))
     } finally {
       setIsSaving(false)
     }
@@ -273,8 +279,9 @@ export default function KKPage() {
       }
 
       setItems((prev) => prev.filter((row) => row.id !== item.id))
+      showToast('success', 'Data kartu keluarga berhasil dihapus.')
     } catch (error) {
-      setErrorMessage(toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, data kartu keluarga belum bisa dihapus sekarang.'))
+      showToast('error', toUserFriendlyMessage(error instanceof Error ? error.message : null, 'Maaf, data kartu keluarga belum bisa dihapus sekarang.'))
     } finally {
       setDeletingId(null)
     }
@@ -584,7 +591,7 @@ export default function KKPage() {
                     <input
                       className="input-field"
                       value={form.nama_kepala_keluarga}
-                      maxLength={16}
+                      maxLength={64}
                       required
                       onChange={(event) => updateForm('nama_kepala_keluarga', event.target.value)}
                     />
@@ -634,7 +641,7 @@ export default function KKPage() {
                     <input
                       className="input-field"
                       value={form.kelurahan}
-                      maxLength={16}
+                      maxLength={64}
                       required
                       onChange={(event) => updateForm('kelurahan', event.target.value)}
                     />
@@ -644,7 +651,7 @@ export default function KKPage() {
                     <input
                       className="input-field"
                       value={form.kecamatan}
-                      maxLength={16}
+                      maxLength={64}
                       required
                       onChange={(event) => updateForm('kecamatan', event.target.value)}
                     />
@@ -654,7 +661,7 @@ export default function KKPage() {
                     <input
                       className="input-field"
                       value={form.kabupaten}
-                      maxLength={16}
+                      maxLength={64}
                       required
                       onChange={(event) => updateForm('kabupaten', event.target.value)}
                     />
@@ -677,7 +684,7 @@ export default function KKPage() {
                     <input
                       className="input-field"
                       value={form.asal_kota}
-                      maxLength={16}
+                      maxLength={64}
                       required
                       onChange={(event) => updateForm('asal_kota', event.target.value)}
                     />
@@ -701,6 +708,9 @@ export default function KKPage() {
           </div>
         </div>
       ) : null}
+
+      {/* ── Toast portal ────────────────────────────────────────────────────────── */}
+      <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
   )
 }

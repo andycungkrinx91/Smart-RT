@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
@@ -36,14 +37,22 @@ async def data_penduduk(
 
 @router.post("/adddatapenduduk", response_model=PendudukOut)
 async def add_data_penduduk(payload: PendudukCreate, db: AsyncSession = Depends(get_db), _=Depends(get_current_user)):
-    obj = await add_penduduk(
-        db,
-        nik=payload.nik,
-        nama_lengkap=payload.nama_lengkap,
-        alamat=payload.alamat,
-        pekerjaan=payload.pekerjaan,
-        status=payload.status,
-    )
+    try:
+        obj = await add_penduduk(
+            db,
+            nik=payload.nik,
+            nama_lengkap=payload.nama_lengkap,
+            alamat=payload.alamat,
+            pekerjaan=payload.pekerjaan,
+            status=payload.status,
+        )
+    except IntegrityError as e:
+        if "Duplicate entry" in str(e) and "nik" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail=f"NIK '{payload.nik}' sudah terdaftar",
+            )
+        raise
     await notify_stats_changed()
     return PendudukOut(
         id=obj.id,
